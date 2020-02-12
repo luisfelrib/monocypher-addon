@@ -2,7 +2,7 @@
 #include <string.h>
 #include "monocypher.h"
 
-napi_value crypto_key_exchange_pub_key(napi_env env, napi_callback_info info)
+napi_value key_exchange_public_key(napi_env env, napi_callback_info info)
 {
   napi_status status;
   napi_value key;
@@ -27,7 +27,7 @@ napi_value crypto_key_exchange_pub_key(napi_env env, napi_callback_info info)
   uint8_t *secretKey = (uint8_t *)arr;
 
   crypto_key_exchange_public_key(pubKey, secretKey);
-  status = napi_create_buffer_copy(env, length, pubKey, arr, &key);
+  status = napi_create_buffer_copy(env, 32, pubKey, arr, &key);
 
   if (status != napi_ok)
   {
@@ -37,7 +37,7 @@ napi_value crypto_key_exchange_pub_key(napi_env env, napi_callback_info info)
   return key;
 }
 
-napi_value crypto_signature(napi_env env, napi_callback_info info)
+napi_value sign(napi_env env, napi_callback_info info)
 {
   napi_status status;
   napi_value sign;
@@ -91,30 +91,88 @@ napi_value crypto_signature(napi_env env, napi_callback_info info)
   return sign;
 }
 
+napi_value key_exchange(napi_env env, napi_callback_info info)
+{
+  napi_status status;
+  napi_value key;
+  size_t argc = 2;
+  napi_value argv[2];
+  void *arr = NULL;
+  size_t length;
+  uint8_t sharedKey[32];
+
+  status = napi_get_cb_info(env, info, &argc, argv, NULL, NULL);
+
+  if (status != napi_ok)
+  {
+    napi_throw_error(env, NULL, "Failed to parse arguments");
+  }
+  /* ---------------- GET MY SECRET KEY --------------------*/
+  status = napi_get_buffer_info(env, argv[0], &arr, &length);
+
+  if (status != napi_ok)
+  {
+    napi_throw_error(env, NULL, "Cannot get MY SECRET KEY");
+  }
+  uint8_t *mySecretKey = (uint8_t *)arr;
+  //-------------------------------------------------------
+  /* ---------------- GET THEIR PUBLIC KEY --------------------*/
+  status = napi_get_buffer_info(env, argv[1], &arr, &length);
+
+  if (status != napi_ok)
+  {
+    napi_throw_error(env, NULL, "Cannot get THEIR PUBLIC KEY");
+  }
+  uint8_t *theirPubKey = (uint8_t *)arr;
+  //-------------------------------------------------------
+  
+  crypto_key_exchange(sharedKey, mySecretKey, theirPubKey);  
+  status = napi_create_buffer_copy(env, 32, sharedKey, arr, &key);
+
+  if (status != napi_ok)
+  {
+    napi_throw_error(env, NULL, "Unable to create return value");
+  }
+
+  return key;
+}
+
 napi_value Init(napi_env env, napi_value exports)
 {
   napi_status status;
   napi_value fn;
 
-  status = napi_create_function(env, NULL, 0, crypto_key_exchange_pub_key, NULL, &fn);
+  status = napi_create_function(env, NULL, 0, key_exchange_public_key, NULL, &fn);
   if (status != napi_ok)
   {
     napi_throw_error(env, NULL, "Unable to wrap native function");
   }
 
-  status = napi_set_named_property(env, exports, "crypto_key_exchange_pub_key", fn);
+  status = napi_set_named_property(env, exports, "key_exchange_public_key", fn);
   if (status != napi_ok)
   {
     napi_throw_error(env, NULL, "Unable to populate exports");
   }
 
-  status = napi_create_function(env, NULL, 0, crypto_signature, NULL, &fn);
+  status = napi_create_function(env, NULL, 0, sign, NULL, &fn);
   if (status != napi_ok)
   {
     napi_throw_error(env, NULL, "Unable to wrap native function");
   }
 
-  status = napi_set_named_property(env, exports, "crypto_signature", fn);
+  status = napi_set_named_property(env, exports, "sign", fn);
+  if (status != napi_ok)
+  {
+    napi_throw_error(env, NULL, "Unable to populate exports");
+  }
+
+  status = napi_create_function(env, NULL, 0, key_exchange, NULL, &fn);
+  if (status != napi_ok)
+  {
+    napi_throw_error(env, NULL, "Unable to wrap native function");
+  }
+
+  status = napi_set_named_property(env, exports, "key_exchange", fn);
   if (status != napi_ok)
   {
     napi_throw_error(env, NULL, "Unable to populate exports");
