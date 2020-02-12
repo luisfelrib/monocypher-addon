@@ -1,0 +1,13 @@
+{
+  "name": "monocypher_addon",
+  "version": "0.0.1",
+  "description": "Monocypher N-API Addon. Monocypher is from https://monocypher.org/",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Luis Felipe luisfelrib@gmail.com",
+  "license": "BSD 2-Clause License",
+  "dependencies": {
+  }
+}
