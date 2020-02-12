@@ -1,5 +1,5 @@
 {
-  "name": "monocypher_addon",
+  "name": "monocypher-addon",
   "version": "0.0.1",
   "description": "Monocypher N-API Addon. Monocypher is from https://monocypher.org/",
   "main": "index.js",
