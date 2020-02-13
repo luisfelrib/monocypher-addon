@@ -38,7 +38,7 @@ module.exports = {
         }
     },
 
-    sign: function(secretKey, pubKey, message){
+    signature: function(secretKey, pubKey, message){
         let sk = checkArgs(secretKey, 32);
         if(sk === undefined){
             throw new Error("SECRET KEY type not supported");
