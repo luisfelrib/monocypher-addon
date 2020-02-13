@@ -2,7 +2,8 @@ const monocypher_addon = require('./build/Release/monocypher');
 function checkArgs(arg, length) {
     if (Buffer.isBuffer(arg)) {
         if (arg.length === length || length === null) {
-            return arg;
+            let newRef = Buffer.from(arg);
+            return newRef;
         } else {
             return false;
         }
@@ -86,5 +87,26 @@ module.exports = {
         } else {
             throw new Error("Invalid length");
         }
+    },
+
+    check: function (signature, pubKey, message) {
+        let sign = checkArgs(signature, 64);
+        if (sign === undefined) {
+            throw new Error("SECRET KEY type not supported");
+        } else if (!sign) {
+            throw new Error("Invalid SECRET KEY length");
+        }
+        let pk = checkArgs(pubKey, 32);
+        if (pk === undefined) {
+            throw new Error("PUBLIC KEY type not supported");
+        } else if (!pk) {
+            throw new Error("Invalid PUBLIC KEY length");
+        }
+        let sign_message = checkArgs(message, null);
+        if (sign_message === undefined) {
+            throw new Error("MESSAGE type not supported");
+        }
+
+        return monocypher_addon.check(sign, pk, sign_message);
     },
 };

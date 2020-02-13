@@ -137,6 +137,58 @@ napi_value key_exchange(napi_env env, napi_callback_info info)
   return key;
 }
 
+napi_value check(napi_env env, napi_callback_info info)
+{
+  napi_status status;
+  napi_value validation;
+  size_t argc = 3;
+  napi_value argv[3];
+  void *arr = NULL;
+  size_t length;
+
+  status = napi_get_cb_info(env, info, &argc, argv, NULL, NULL);
+
+  if (status != napi_ok)
+  {
+    napi_throw_error(env, NULL, "Failed to parse arguments");
+  }
+  /* ---------------- GET SIGNATURE --------------------*/
+  status = napi_get_buffer_info(env, argv[0], &arr, &length);
+
+  if (status != napi_ok)
+  {
+    napi_throw_error(env, NULL, "Cannot get SIGNATURE");
+  }
+  uint8_t *signature = (uint8_t *)arr;
+  //-------------------------------------------------------
+  /* ---------------- GET PUBLIC KEY --------------------*/
+  status = napi_get_buffer_info(env, argv[1], &arr, &length);
+
+  if (status != napi_ok)
+  {
+    napi_throw_error(env, NULL, "Cannot get THEIR PUBLIC KEY");
+  }
+  uint8_t *pubKey = (uint8_t *)arr;
+  //-------------------------------------------------------
+  /* ---------------- GET MESSAGE ------------------*/
+  status = napi_get_buffer_info(env, argv[2], &arr, &length);
+
+  if (status != napi_ok)
+  {
+    napi_throw_error(env, NULL, "Cannot get MESSAGE");
+  }
+  uint8_t *message = (uint8_t *)arr;
+  //-------------------------------------------------------
+  int ret = crypto_check(signature, pubKey, message, length);  
+  status = napi_create_int32(env, ret, &validation);
+
+  if (status != napi_ok) {
+    napi_throw_error(env, NULL, "Unable to create return value");
+  }
+
+  return validation;
+}
+
 napi_value Init(napi_env env, napi_value exports)
 {
   napi_status status;
@@ -173,6 +225,18 @@ napi_value Init(napi_env env, napi_value exports)
   }
 
   status = napi_set_named_property(env, exports, "key_exchange", fn);
+  if (status != napi_ok)
+  {
+    napi_throw_error(env, NULL, "Unable to populate exports");
+  }
+
+  status = napi_create_function(env, NULL, 0, check, NULL, &fn);
+  if (status != napi_ok)
+  {
+    napi_throw_error(env, NULL, "Unable to wrap native function");
+  }
+
+  status = napi_set_named_property(env, exports, "check", fn);
   if (status != napi_ok)
   {
     napi_throw_error(env, NULL, "Unable to populate exports");
