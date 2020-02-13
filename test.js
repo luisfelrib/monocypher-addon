@@ -9,3 +9,6 @@ let stkPub = Buffer.from("420b9b0a6ab1067c71802771e5de526040859afdd217fd93e2b848
 let signMessage = Buffer.concat([randC, randS, stkPub]);
 
 console.log(monocypher.signature(LTK_coord_secret, LTK_coord_public, signMessage));
+
+
+console.log(monocypher.get_random_bytes(32));
